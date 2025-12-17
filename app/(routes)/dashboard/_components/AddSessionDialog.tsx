@@ -56,6 +56,15 @@ function AddSessionDialog() {
             const doctor = AIDoctorAgents.find(d => d.id === part.doctorId);
             if (doctor) {
                 setselectedDoctor(doctor);
+                // Set default description for body part, but preserve any existing additional notes
+                const bodyPartDescription = `Consultation for ${bodyPart}`;
+                setnote(prevNote => {
+                    // If there's already a note that doesn't start with "Consultation for", preserve it
+                    if (prevNote && !prevNote.startsWith('Consultation for')) {
+                        return `${bodyPartDescription}\n\nAdditional details: ${prevNote}`;
+                    }
+                    return bodyPartDescription;
+                });
             }
         }
     }
@@ -163,8 +172,28 @@ function AddSessionDialog() {
                                 </div>
                                 <p className='text-sm text-gray-500 mt-2'>Click on the body part or describe symptoms below</p>
                                 <h2 className='mt-4'>Or add symptoms/details</h2>
-                                <Textarea placeholder='Add Detail here....' className='h-[150px] mt-1'
-                                    onChange={(e) => setnote(e.target.value)} />
+                                <Textarea
+                                    placeholder='Add Detail here....'
+                                    className='h-[150px] mt-1'
+                                    value={note || ''}
+                                    onChange={(e) => {
+                                        const newValue = e.target.value;
+                                        // If user has selected a body part and is typing additional details
+                                        if (selectedBodyPart && note && note.startsWith('Consultation for')) {
+                                            const bodyPartInfo = note.split('\n\nAdditional details:')[0];
+                                            if (newValue.startsWith(bodyPartInfo)) {
+                                                // User is editing within the body part description
+                                                setnote(newValue);
+                                            } else {
+                                                // User is adding additional details
+                                                setnote(`${bodyPartInfo}\n\nAdditional details: ${newValue}`);
+                                            }
+                                        } else {
+                                            // No body part selected or simple text input
+                                            setnote(newValue);
+                                        }
+                                    }}
+                                />
                             </div> :
                             <div className='grid grid-cols-2 gap-5'>
                                 {/* //suggestDoctor */}
