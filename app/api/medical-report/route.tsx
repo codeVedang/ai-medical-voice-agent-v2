@@ -1,6 +1,6 @@
 
 import { db } from "@/config/db";
-import { openai } from "@/config/OpenAiModel";
+import { openai, moderateContent } from "@/config/OpenAiModel";
 import { SessionChatTable } from "@/config/schema";
 import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
@@ -42,6 +42,13 @@ export async function POST(req:NextRequest) {
     const {sessionId,sessionDetail,message} = await req.json();
    try {
            const UserInput = "AI Doctor Agent Info:"+JSON.stringify(sessionDetail)+", Conversation:"+JSON.stringify(message);
+           
+           // Moderate the input
+           const isInputSafe = await moderateContent(UserInput);
+           if (!isInputSafe) {
+               return NextResponse.json({ error: "Input contains unsafe content. Please rephrase your query." }, { status: 400 });
+           }
+           
            const completion = await openai.chat.completions.create({
                model: "google/gemini-2.5-flash",
                messages: [
@@ -55,6 +62,13 @@ export async function POST(req:NextRequest) {
            const rawResp = completion.choices[0].message
            //@ts-ignore
            const Resp = rawResp.content.trim().replace('```json','').replace('```','')
+           
+           // Moderate the output
+           const isOutputSafe = await moderateContent(Resp);
+           if (!isOutputSafe) {
+               return NextResponse.json({ error: "Generated response contains unsafe content. Please try again." }, { status: 500 });
+           }
+           
            const JSONResp=JSON.parse(Resp)
 
            //Save to Database

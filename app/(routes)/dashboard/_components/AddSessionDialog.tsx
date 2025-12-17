@@ -19,6 +19,7 @@ import SuggestedDoctorCard from './SuggestedDoctorCard'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { SessionDetail } from '../medical-agent/[sessionId]/page'
+import { bodyParts, AIDoctorAgents } from '@/shared/list'
 
 
 function AddSessionDialog() {
@@ -28,6 +29,7 @@ function AddSessionDialog() {
     const [suggestDoctor, setsuggestDoctor] = useState<doctorAgent[]>()
     const [selectedDoctor, setselectedDoctor] = useState<doctorAgent>()
     const [historyList, sethistoryList] = useState<SessionDetail[]>([]);
+    const [selectedBodyPart, setselectedBodyPart] = useState<string>();
     const router = useRouter()
 
     const { has } = useAuth()
@@ -47,7 +49,23 @@ function AddSessionDialog() {
           sethistoryList(result.data)
         }
 
+    const OnBodyPartSelect = (bodyPart: string) => {
+        setselectedBodyPart(bodyPart);
+        const part = bodyParts.find(p => p.name === bodyPart);
+        if (part) {
+            const doctor = AIDoctorAgents.find(d => d.id === part.doctorId);
+            if (doctor) {
+                setselectedDoctor(doctor);
+            }
+        }
+    }
+
     const OnClickNext = async () => {
+        if (selectedDoctor) {
+            // If doctor already selected from body part, proceed
+            OnStartConsultation();
+            return;
+        }
         setloading(true)
         const result = await axios.post('api/suggest-doctors', {
             notes: note
@@ -87,8 +105,65 @@ function AddSessionDialog() {
                     <DialogDescription asChild>
                         {!suggestDoctor ?
                             <div>
-                                <h2>Add Symptons or Any Other Details</h2>
-                                <Textarea placeholder='Add Detail here....' className='h-[200px] mt-1'
+                                <h2>Select the body part where you feel the issue</h2>
+                                {selectedBodyPart && <p className='text-blue-600 font-semibold'>Selected: {selectedBodyPart}</p>}
+                                <div className='mt-4 relative flex justify-center'>
+                                    <img src='/body-parts.png' alt='Body Parts' className='max-w-full h-auto' />
+                                    {/* Overlay buttons for body parts */}
+                                    <button 
+                                        className='absolute top-0 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
+                                        style={{top: '5%', left: '50%'}}
+                                        onClick={() => OnBodyPartSelect('Head')}
+                                    >
+                                        Head
+                                    </button>
+                                    <button 
+                                        className='absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
+                                        style={{top: '25%', left: '50%'}}
+                                        onClick={() => OnBodyPartSelect('Chest/Heart')}
+                                    >
+                                        Chest
+                                    </button>
+                                    <button 
+                                        className='absolute top-1/4 left-1/4 bg-orange-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
+                                        style={{top: '25%', left: '25%'}}
+                                        onClick={() => OnBodyPartSelect('Arms/Hands')}
+                                    >
+                                        Arms
+                                    </button>
+                                    <button 
+                                        className='absolute top-1/4 right-1/4 bg-orange-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
+                                        style={{top: '25%', right: '25%'}}
+                                        onClick={() => OnBodyPartSelect('Arms/Hands')}
+                                    >
+                                        Arms
+                                    </button>
+                                    <button 
+                                        className='absolute top-1/2 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
+                                        style={{top: '50%', left: '50%'}}
+                                        onClick={() => OnBodyPartSelect('Stomach')}
+                                    >
+                                        Stomach
+                                    </button>
+                                    <button 
+                                        className='absolute bottom-1/4 left-1/3 bg-purple-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
+                                        style={{bottom: '25%', left: '33%'}}
+                                        onClick={() => OnBodyPartSelect('Legs/Feet')}
+                                    >
+                                        Legs
+                                    </button>
+                                    <button 
+                                        className='absolute bottom-1/4 right-1/3 bg-purple-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
+                                        style={{bottom: '25%', right: '33%'}}
+                                        onClick={() => OnBodyPartSelect('Legs/Feet')}
+                                    >
+                                        Legs
+                                    </button>
+                                    {/* Add more as needed */}
+                                </div>
+                                <p className='text-sm text-gray-500 mt-2'>Click on the body part or describe symptoms below</p>
+                                <h2 className='mt-4'>Or add symptoms/details</h2>
+                                <Textarea placeholder='Add Detail here....' className='h-[150px] mt-1'
                                     onChange={(e) => setnote(e.target.value)} />
                             </div> :
                             <div className='grid grid-cols-2 gap-5'>
@@ -103,8 +178,13 @@ function AddSessionDialog() {
                 </DialogHeader>
                 <DialogFooter>
                     <DialogClose><Button variant={'outline'}>Cancel</Button></DialogClose>
-                    {!suggestDoctor ? <Button disabled={!note || loading} onClick={(e) => OnClickNext()}>Next {loading ? <Loader2 className='animate-spin' /> : <ArrowRight />}</Button> :
-                        <Button disabled={!note || loading} onClick={() => OnStartConsultation()}>Start Consultation {loading ? <Loader2 className='animate-spin' /> : <ArrowRight />}</Button>}
+                    {!suggestDoctor ? 
+                        (selectedDoctor ? 
+                            <Button onClick={() => OnStartConsultation()}>Start Consultation <ArrowRight /></Button> :
+                            <Button disabled={!note && !selectedBodyPart || loading} onClick={(e) => OnClickNext()}>Next {loading ? <Loader2 className='animate-spin' /> : <ArrowRight />}</Button>
+                        ) :
+                        <Button disabled={!selectedDoctor || loading} onClick={() => OnStartConsultation()}>Start Consultation {loading ? <Loader2 className='animate-spin' /> : <ArrowRight />}</Button>
+                    }
                 </DialogFooter>
             </DialogContent>
         </Dialog>

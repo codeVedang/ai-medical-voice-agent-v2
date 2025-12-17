@@ -32,12 +32,28 @@ function MedicalVoiceAgent() {
   const [currentRole, setcurrentRole] = useState<string | null>()
   const [liveTranscript, setliveTranscript] = useState<string>()
   const [message, setmessage] = useState<message[]>([])
+  const [callDuration, setCallDuration] = useState(0)
+  const [callTimer, setCallTimer] = useState<NodeJS.Timeout | null>(null)
   const router = useRouter();
 
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   useEffect(() => {
     sessionId && GetSessionDetails()
   }, [sessionId])
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (callTimer) {
+        clearInterval(callTimer);
+      }
+    };
+  }, [callTimer]);
 
 
   const GetSessionDetails = async () => {
@@ -48,14 +64,43 @@ function MedicalVoiceAgent() {
 
   //vapi components functions
   const handleStart = () => {
-    
+
     console.log('Call started');
     setcallStarted(true);
+    setCallDuration(0);
+
+    // Start call duration timer
+    const timer = setInterval(() => {
+      setCallDuration(prev => {
+        const newDuration = prev + 1;
+
+        // Warn user at 8 minutes (480 seconds) - typical timeout is around 10 minutes
+        if (newDuration === 480) {
+          toast.warning("Call has been active for 8 minutes. Consider ending soon to avoid service timeout.");
+        }
+
+        // Warn again at 9 minutes
+        if (newDuration === 540) {
+          toast.warning("Call approaching 9 minutes. Service may timeout soon.");
+        }
+
+        return newDuration;
+      });
+    }, 1000);
+
+    setCallTimer(timer);
   };
   //vapi components functions
   const handleEnd = () => {
     console.log('Call ended');
     setcallStarted(false);
+    toast.info('Call ended. Your medical report has been generated.');
+
+    // Clear the call timer
+    if (callTimer) {
+      clearInterval(callTimer);
+      setCallTimer(null);
+    }
   };
   //vapi components functions
   const handleMessage = (message: any) => {
@@ -88,7 +133,30 @@ function MedicalVoiceAgent() {
     // VAPI internal error handler
     vapi.on('error', (err) => {
       console.error("Call error:", err);
-      alert("Call failed. Please refresh or try again.");
+
+      // Handle specific error types
+      if (err?.error?.type === 'ejected') {
+        toast.error("Call was ended by the service. This may be due to session timeout or service limits.");
+      } else if (err?.error?.msg?.includes('timeout')) {
+        toast.error("Call timed out. Please try starting a new session.");
+      } else if (err?.error?.msg?.includes('network') || err?.error?.msg?.includes('connection')) {
+        toast.error("Network connection issue. Please check your internet and try again.");
+      } else {
+        toast.error("Call encountered an error. Please try again.");
+      }
+
+      // Clean up on error
+      setcallStarted(false);
+      if (callTimer) {
+        clearInterval(callTimer);
+        setCallTimer(null);
+      }
+      if (vapiInstance) {
+        vapiInstance.off('call-start', handleStart);
+        vapiInstance.off('call-end', handleEnd);
+        vapiInstance.off('message', handleMessage);
+        setvapiInstance(null);
+      }
     });
 
     console.log({
@@ -143,7 +211,7 @@ function MedicalVoiceAgent() {
 
 
   const endCall =async() => {
-   const result=await GenerateReport(); 
+   const result=await GenerateReport();
     if (!vapiInstance) return;
     vapiInstance.stop();
     // Use the same functions to safely remove listeners
@@ -154,9 +222,14 @@ function MedicalVoiceAgent() {
     // vapiInstance.off('speech-end');
     setcallStarted(false);
     setvapiInstance(null);
-    toast.success('Your Report Is Generated!')
-    router.replace('/dashboard');
 
+    // Clear the call timer
+    if (callTimer) {
+      clearInterval(callTimer);
+      setCallTimer(null);
+    }
+
+    toast.success('Your medical report has been generated successfully!')
   };
 
   const GenerateReport=async()=>{
@@ -175,7 +248,7 @@ function MedicalVoiceAgent() {
     <div className='p-3 border rounded-3xl bg-secondary '>
       <div className='flex justify-between items-center'>
         <h2 className='p-1 px-2 border rounded-md flex gap-2 items-center'><Circle className={`h-4 w-4 rounded-full ${!callStarted ? 'bg-red-500' : 'bg-green-500'}`} /> {!callStarted ? 'Not Connected' : 'Connected...'}</h2>
-        <h2 className='font-bold text-xl text-gray-400'>00:00</h2>
+        <h2 className='font-bold text-xl text-gray-400'>{formatDuration(callDuration)}</h2>
       </div>
 
       {sessionDetail && <div className='flex flex-col items-center mt-10'>
@@ -194,8 +267,15 @@ function MedicalVoiceAgent() {
           {liveTranscript && liveTranscript?.length > 0 && <h2 className='text-lg'>{currentRole} : {liveTranscript}</h2>}
         </div>
 
-        {!callStarted ? <Button className='mt-20' onClick={startCall}><PhoneCall /> Start Call</Button> :
-          <Button variant={'destructive'} onClick={endCall}><PhoneOff /> Disconnected</Button>}
+        {!callStarted ? (
+          <div className="flex flex-col items-center gap-4">
+            <Button className='mt-20' onClick={startCall}><PhoneCall /> Start Call</Button>
+            <Button variant="outline" onClick={() => router.push('/dashboard')}>
+              Return to Dashboard
+            </Button>
+          </div>
+        ) :
+          <Button variant={'destructive'} onClick={endCall}><PhoneOff /> End Call</Button>}
 
       </div>}
     </div>

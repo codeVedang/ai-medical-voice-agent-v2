@@ -15,6 +15,9 @@ type ReportProps = {
 }
 
 function ViewReportDialog({ record }: ReportProps) {
+    // Parse the report data from JSON
+    const reportData = record.report ? (typeof record.report === 'string' ? JSON.parse(record.report) : record.report) : null;
+    
     // Generate a simple summary of the conversation
     const conversationSummary = record.conversation
         ? `${record.conversation[0]?.text}...` // Get the first assistant message as the summary
@@ -39,19 +42,45 @@ function ViewReportDialog({ record }: ReportProps) {
                                     <h2>Consult Date: {moment(new Date(record?.createdOn)).fromNow()}</h2>
                                 </div>
 
+                                {/* Chief Complaint */}
+                                <div className='mt-4'>
+                                    <h3 className='font-semibold text-lg'>Chief Complaint</h3>
+                                    <p>{reportData?.chiefComplaint || "Not available"}</p>
+                                </div>
+
+                                {/* Summary */}
+                                <div className='mt-4'>
+                                    <h3 className='font-semibold text-lg'>Summary</h3>
+                                    <p>{reportData?.summary || "No summary available"}</p>
+                                </div>
+
+                                {/* Symptoms */}
+                                <div className='mt-4'>
+                                    <h3 className='font-semibold text-lg'>Symptoms</h3>
+                                    {reportData?.symptoms?.length > 0 ? (
+                                        <ul>
+                                            {reportData.symptoms.map((symptom: string, index: number) => (
+                                                <li key={index}>• {symptom}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p>No symptoms recorded</p>
+                                    )}
+                                </div>
+
                                 {/* Duration & Severity */}
                                 <div className='mt-4'>
                                     <h3 className='font-semibold text-lg'>Duration & Severity</h3>
-                                    <p><strong>Duration:</strong> {record?.duration || "Not specified"}</p>
-                                    <p><strong>Severity:</strong> {record?.severity || "Moderate"}</p>
+                                    <p><strong>Duration:</strong> {reportData?.duration || "Not specified"}</p>
+                                    <p><strong>Severity:</strong> {reportData?.severity || "Moderate"}</p>
                                 </div>
 
                                 {/* Medications Mentioned */}
                                 <div className='mt-4'>
                                     <h3 className='font-semibold text-lg'>Medications Mentioned</h3>
-                                    {record?.medicationsMentioned?.length > 0 ? (
+                                    {reportData?.medicationsMentioned?.length > 0 ? (
                                         <ul>
-                                            {record.medicationsMentioned.map((medication: string, index: number) => (
+                                            {reportData.medicationsMentioned.map((medication: string, index: number) => (
                                                 <li key={index}>• {medication}</li>
                                             ))}
                                         </ul>
@@ -63,11 +92,15 @@ function ViewReportDialog({ record }: ReportProps) {
                                 {/* Recommendations */}
                                 <div className='mt-4'>
                                     <h3 className='font-semibold text-lg'>Recommendations</h3>
-                                    <ul>
-                                        {record?.recommendations?.map((recommendation: string, index: number) => (
-                                            <li key={index}>• {recommendation}</li>
-                                        ))}
-                                    </ul>
+                                    {reportData?.recommendations?.length > 0 ? (
+                                        <ul>
+                                            {reportData.recommendations.map((recommendation: string, index: number) => (
+                                                <li key={index}>• {recommendation}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p>No recommendations available</p>
+                                    )}
                                 </div>
 
                                 {/* Conversation Summary */}

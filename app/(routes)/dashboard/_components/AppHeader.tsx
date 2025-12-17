@@ -22,7 +22,7 @@ const menuOptions = [
     {
         id: 4,
         name: 'Contact',
-        path: 'mailto:vedangt17@gmail.com'
+        path: '/contact'
     },
 
 ]

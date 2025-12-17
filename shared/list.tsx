@@ -90,3 +90,15 @@ export const AIDoctorAgents = [
     subscriptionRequired: true
   }
 ];
+export const bodyParts = [
+  { name: "Head", doctorId: 7 }, // ENT for head issues
+  { name: "Chest/Heart", doctorId: 6 }, // Cardiologist
+  { name: "Arms/Hands", doctorId: 8 }, // Orthopedic
+  { name: "Stomach", doctorId: 1 }, // General Physician
+  { name: "Legs/Feet", doctorId: 8 }, // Orthopedic
+  { name: "Skin", doctorId: 3 }, // Dermatologist
+  { name: "Teeth", doctorId: 10 }, // Dentist
+  { name: "Mental Health", doctorId: 4 }, // Psychologist
+  { name: "Women's Health", doctorId: 9 }, // Gynecologist
+  { name: "Children's Health", doctorId: 2 }, // Pediatrician
+];
