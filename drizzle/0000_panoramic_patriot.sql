@@ -18,3 +18,16 @@ CREATE TABLE "users" (
 );
 --> statement-breakpoint
 ALTER TABLE "sessionChatTable" ADD CONSTRAINT "sessionChatTable_createdBy_users_email_fk" FOREIGN KEY ("createdBy") REFERENCES "public"."users"("email") ON DELETE no action ON UPDATE no action;
+--> statement-breakpoint
+
+-- Add schedule_followups table to store scheduled follow-up emails
+CREATE TABLE IF NOT EXISTS "schedule_followups" (
+	"id" serial PRIMARY KEY,
+	"name" varchar(255) NOT NULL,
+	"email" varchar(255) NOT NULL,
+	"scheduledAt" varchar NOT NULL,
+	"message" text,
+	"sent" integer DEFAULT 0,
+	"createdOn" varchar
+);
+--> statement-breakpoint

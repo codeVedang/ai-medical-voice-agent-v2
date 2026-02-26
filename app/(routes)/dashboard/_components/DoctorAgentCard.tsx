@@ -28,39 +28,54 @@ type props = {
 function DoctorAgentCard({ doctorAgent }: props) {
 
     const [loading, setloading] = useState(false)
-    const router=useRouter()
+    const router = useRouter()
 
     const { has } = useAuth()
     //@ts-ignore
-    const paidUser = has&&has({ plan: 'pro' })
+    const paidUser = has && has({ plan: 'pro' })
 
     const OnStartConsultation = async () => {
-            setloading(true)
-            //Save into Database
-            const result = await axios.post('api/session-chat', {
-                notes: "New Query",
-                selectedDoctor: doctorAgent
-            });
-            console.log(result.data)
-    
-            if (result.data?.sessionId) {
-                console.log(result.data.sessionId);
-                //Route a conversation Screen
-                router.push('/dashboard/medical-agent/' + result.data.sessionId)
-            }
-    
-            setloading(false)
+        setloading(true)
+        //Save into Database
+        const result = await axios.post('api/session-chat', {
+            notes: "New Query",
+            selectedDoctor: doctorAgent
+        });
+        console.log(result.data)
+
+        if (result.data?.sessionId) {
+            console.log(result.data.sessionId);
+            //Route a conversation Screen
+            router.push('/dashboard/medical-agent/' + result.data.sessionId)
         }
 
+        setloading(false)
+    }
+
     return (
-        <div className='relative'>
-            {doctorAgent.subscriptionRequired && <Badge className='absolute m-2 right-0'>Premium</Badge>}
-            <Image src={doctorAgent.image}
-                alt={doctorAgent.specialist} width={200} height={300}
-                className='w-full h-[230px] object-cover rounded-xl hover:scale-105 transition-all' />
-            <h2 className='font-bold mt-1'>{doctorAgent.specialist}</h2>
-            <p className='line-clamp-2 text-sm text-gray-500'>{doctorAgent.description}</p>
-            <Button className='w-full mt-2 hover:scale-105 transition-all'  disabled={!paidUser && doctorAgent.subscriptionRequired} onClick={OnStartConsultation}>Start Consultation {loading?<Loader2Icon className='animate-spin'/>: <IconArrowRight />}</Button>
+        <div className='relative flex flex-col h-full bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all p-3 group'>
+            {doctorAgent.subscriptionRequired && <Badge className='absolute top-4 right-4 z-10 shadow-sm backdrop-blur-md bg-white/90 text-blue-700 hover:bg-white dark:bg-gray-900/90 dark:text-blue-300'>Premium</Badge>}
+            <div className='overflow-hidden rounded-xl mb-3'>
+                <Image src={doctorAgent.image}
+                    alt={doctorAgent.specialist} width={200} height={300}
+                    className='w-full h-[200px] object-cover hover:scale-105 transition-transform duration-500' />
+            </div>
+            <div className='flex flex-col flex-grow'>
+                <h2 className='font-bold text-lg text-gray-900 dark:text-white'>{doctorAgent.specialist}</h2>
+                <p className='line-clamp-2 text-sm text-gray-500 dark:text-gray-400 mt-1 flex-grow'>{doctorAgent.description}</p>
+                <div className='mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50'>
+                    <Button
+                        className='w-full group-hover:bg-blue-600 group-hover:text-white transition-colors'
+                        variant="secondary"
+                        disabled={!paidUser && doctorAgent.subscriptionRequired}
+                        onClick={OnStartConsultation}
+                    >
+                        {loading ? <Loader2Icon className='animate-spin mr-2 h-4 w-4' /> : null}
+                        {loading ? 'Starting...' : 'Consult Now'}
+                        {!loading && <IconArrowRight className='ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform' />}
+                    </Button>
+                </div>
+            </div>
         </div>
     )
 }

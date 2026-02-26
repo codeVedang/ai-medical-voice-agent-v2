@@ -26,7 +26,7 @@ function ViewReportDialog({ record }: ReportProps) {
     return (
         <div>
             <Dialog>
-                <DialogTrigger>
+                <DialogTrigger asChild>
                     <Button variant='link'>View Report</Button>
                 </DialogTrigger>
                 <DialogContent>

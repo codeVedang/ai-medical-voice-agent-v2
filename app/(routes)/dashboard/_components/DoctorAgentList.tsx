@@ -4,16 +4,15 @@ import DoctorAgentCard from './DoctorAgentCard'
 
 function DoctorAgentList() {
   return (
-    <div className='mt-10'>
-      <h2 className='font-bold text-xl'>AI Specialist Doctors</h2>
-      <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-8 mt-5 '>
+    <div>
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
         {
-            
-            AIDoctorAgents.map((doctor,index)=>(
-              <div key={index}>
-                <DoctorAgentCard doctorAgent={doctor}/>
-              </div>
-            ))
+
+          AIDoctorAgents.map((doctor, index) => (
+            <div key={index} className="h-full">
+              <DoctorAgentCard doctorAgent={doctor} />
+            </div>
+          ))
         }
       </div>
     </div>

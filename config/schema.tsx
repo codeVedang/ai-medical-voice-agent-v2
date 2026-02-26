@@ -19,3 +19,13 @@ export const SessionChatTable = pgTable('SessionChatTable',{
   selectedDoctor:json(),
   
 })
+
+export const ScheduleFollowupsTable = pgTable('schedule_followups', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  name: varchar({ length: 255 }).notNull(),
+  email: varchar({ length: 255 }).notNull(),
+  scheduledAt: varchar().notNull(),
+  message: text(),
+  sent: integer().default(0),
+  createdOn: varchar()
+})

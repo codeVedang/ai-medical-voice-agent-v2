@@ -22,7 +22,7 @@ import { SessionDetail } from '../medical-agent/[sessionId]/page'
 import { bodyParts, AIDoctorAgents } from '@/shared/list'
 
 
-function AddSessionDialog() {
+function AddSessionDialog({ open, setOpen }: { open?: boolean, setOpen?: (open: boolean) => void }) {
 
     const [note, setnote] = useState<string>()
     const [loading, setloading] = useState(false)
@@ -36,18 +36,18 @@ function AddSessionDialog() {
     //@ts-ignore
     const paidUser = has && has({ plan: 'pro' })
 
-     useEffect(() => {
-          
+    useEffect(() => {
+
         GetHistoryList();
-          
-        },[])
-        
-    
-        const GetHistoryList=async()=>{
-          const result = await axios.get('/api/session-chat?sessionId=all')
-          console.log(result.data)
-          sethistoryList(result.data)
-        }
+
+    }, [])
+
+
+    const GetHistoryList = async () => {
+        const result = await axios.get('/api/session-chat?sessionId=all')
+        console.log(result.data)
+        sethistoryList(result.data)
+    }
 
     const OnBodyPartSelect = (bodyPart: string) => {
         setselectedBodyPart(bodyPart);
@@ -104,9 +104,15 @@ function AddSessionDialog() {
     }
 
     return (
-        <Dialog>
-            <DialogTrigger>
-                <Button className='mt-3' disabled={!paidUser && historyList?.length>=1}>+ Start a Consultation</Button>
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button
+                    variant="secondary"
+                    className='bg-white text-blue-700 hover:bg-blue-50 border-0 shadow-md font-semibold px-6 py-6 rounded-xl hover:scale-105 transition-all'
+                    disabled={!paidUser && historyList?.length >= 1}
+                >
+                    + Start a Consultation
+                </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
@@ -119,51 +125,51 @@ function AddSessionDialog() {
                                 <div className='mt-4 relative flex justify-center'>
                                     <img src='/body-parts.png' alt='Body Parts' className='max-w-full h-auto' />
                                     {/* Overlay buttons for body parts */}
-                                    <button 
-                                        className='absolute top-0 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
-                                        style={{top: '5%', left: '50%'}}
+                                    <button
+                                        className='absolute top-0 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100'
+                                        style={{ top: '5%', left: '50%' }}
                                         onClick={() => OnBodyPartSelect('Head')}
                                     >
                                         Head
                                     </button>
-                                    <button 
-                                        className='absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
-                                        style={{top: '25%', left: '50%'}}
+                                    <button
+                                        className='absolute top-1/4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100'
+                                        style={{ top: '25%', left: '50%' }}
                                         onClick={() => OnBodyPartSelect('Chest/Heart')}
                                     >
                                         Chest
                                     </button>
-                                    <button 
-                                        className='absolute top-1/4 left-1/4 bg-orange-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
-                                        style={{top: '25%', left: '25%'}}
+                                    <button
+                                        className='absolute top-1/4 left-1/4 bg-orange-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100'
+                                        style={{ top: '25%', left: '25%' }}
                                         onClick={() => OnBodyPartSelect('Arms/Hands')}
                                     >
                                         Arms
                                     </button>
-                                    <button 
-                                        className='absolute top-1/4 right-1/4 bg-orange-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
-                                        style={{top: '25%', right: '25%'}}
+                                    <button
+                                        className='absolute top-1/4 right-1/4 bg-orange-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100'
+                                        style={{ top: '25%', right: '25%' }}
                                         onClick={() => OnBodyPartSelect('Arms/Hands')}
                                     >
                                         Arms
                                     </button>
-                                    <button 
-                                        className='absolute top-1/2 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
-                                        style={{top: '50%', left: '50%'}}
+                                    <button
+                                        className='absolute top-1/2 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100'
+                                        style={{ top: '50%', left: '50%' }}
                                         onClick={() => OnBodyPartSelect('Stomach')}
                                     >
                                         Stomach
                                     </button>
-                                    <button 
-                                        className='absolute bottom-1/4 left-1/3 bg-purple-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
-                                        style={{bottom: '25%', left: '33%'}}
+                                    <button
+                                        className='absolute bottom-1/4 left-1/3 bg-purple-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100'
+                                        style={{ bottom: '25%', left: '33%' }}
                                         onClick={() => OnBodyPartSelect('Legs/Feet')}
                                     >
                                         Legs
                                     </button>
-                                    <button 
-                                        className='absolute bottom-1/4 right-1/3 bg-purple-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100' 
-                                        style={{bottom: '25%', right: '33%'}}
+                                    <button
+                                        className='absolute bottom-1/4 right-1/3 bg-purple-500 text-white px-2 py-1 rounded opacity-75 hover:opacity-100'
+                                        style={{ bottom: '25%', right: '33%' }}
                                         onClick={() => OnBodyPartSelect('Legs/Feet')}
                                     >
                                         Legs
@@ -206,9 +212,9 @@ function AddSessionDialog() {
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter>
-                    <DialogClose><Button variant={'outline'}>Cancel</Button></DialogClose>
-                    {!suggestDoctor ? 
-                        (selectedDoctor ? 
+                    <DialogClose asChild><Button variant={'outline'}>Cancel</Button></DialogClose>
+                    {!suggestDoctor ?
+                        (selectedDoctor ?
                             <Button onClick={() => OnStartConsultation()}>Start Consultation <ArrowRight /></Button> :
                             <Button disabled={!note && !selectedBodyPart || loading} onClick={(e) => OnClickNext()}>Next {loading ? <Loader2 className='animate-spin' /> : <ArrowRight />}</Button>
                         ) :
